@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AkhtarCloud</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --neon-cyan:#00f5ff;
+    --neon-blue:#0084ff;
+    --neon-purple:#b400ff;
+    --neon-pink:#ff0099;
+    --dark-bg:#010614;
+    --card-bg:rgba(0,20,50,0.6);
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--dark-bg);
+    color:#fff;
+    font-family:'Rajdhani',sans-serif;
+    overflow-x:hidden;
+    cursor:none;
+  }
+
+  /* Custom cursor */
+  #cursor{
+    position:fixed;width:12px;height:12px;
+    background:var(--neon-cyan);border-radius:50%;
+    pointer-events:none;z-index:9999;
+    transform:translate(-50%,-50%);
+    transition:transform .1s,width .2s,height .2s;
+    box-shadow:0 0 20px var(--neon-cyan),0 0 40px var(--neon-cyan);
+  }
+  #cursor-ring{
+    position:fixed;width:36px;height:36px;
+    border:1px solid rgba(0,245,255,.4);border-radius:50%;
+    pointer-events:none;z-index:9998;
+    transform:translate(-50%,-50%);
+    transition:transform .15s ease-out,width .3s,height .3s;
+  }
+
+  /* Canvas */
+  #starfield{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;
+  }
+
+  /* Aurora background */
+  .aurora{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;overflow:hidden;
+  }
+  .aurora-band{
+    position:absolute;border-radius:50%;filter:blur(80px);opacity:.18;
+    animation:aurora-drift 12s ease-in-out infinite alternate;
+  }
+  .ab1{width:80vw;height:60vh;background:radial-gradient(ellipse,#0084ff,transparent 70%);top:-20%;left:-10%;animation-delay:0s}
+  .ab2{width:70vw;height:50vh;background:radial-gradient(ellipse,#b400ff,transparent 70%);top:10%;right:-10%;animation-delay:-4s}
+  .ab3{width:60vw;height:40vh;background:radial-gradient(ellipse,#00f5ff,transparent 70%);bottom:-10%;left:20%;animation-delay:-8s}
+  @keyframes aurora-drift{
+    0%{transform:translate(0,0) scale(1)}
+    100%{transform:translate(30px,20px) scale(1.08)}
+  }
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.2rem 4rem;
+    background:rgba(1,6,20,.7);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(0,245,255,.1);
+  }
+  .nav-logo{
+    font-family:'Orbitron',sans-serif;
+    font-size:1.4rem;font-weight:900;
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    letter-spacing:.1em;
+  }
+  .nav-links{display:flex;gap:2.5rem;list-style:none}
+  .nav-links a{
+    color:rgba(255,255,255,.7);text-decoration:none;
+    font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;
+    transition:color .3s;position:relative;
+  }
+  .nav-links a::after{
+    content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;
+    background:var(--neon-cyan);transition:width .3s;
+  }
+  .nav-links a:hover{color:var(--neon-cyan)}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{
+    padding:.6rem 1.8rem;border:1px solid var(--neon-cyan);
+    background:transparent;color:var(--neon-cyan);
+    font-family:'Rajdhani',sans-serif;font-size:.95rem;
+    font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    cursor:pointer;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
+    transition:all .3s;
+  }
+  .nav-cta:hover{background:var(--neon-cyan);color:var(--dark-bg);box-shadow:0 0 30px var(--neon-cyan)}
+
+  /* HERO */
+  #hero{
+    position:relative;z-index:1;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    padding:6rem 2rem 4rem;
+  }
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:.6rem;
+    border:1px solid rgba(0,245,255,.3);
+    background:rgba(0,245,255,.05);
+    padding:.4rem 1.2rem;border-radius:100px;
+    font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--neon-cyan);margin-bottom:2rem;
+    animation:fade-up .8s ease both;
+  }
+  .badge-dot{width:7px;height:7px;background:var(--neon-cyan);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,245,255,.4)}50%{opacity:.7;box-shadow:0 0 0 8px transparent}}
+
+  .hero-title{
+    font-family:'Orbitron',sans-serif;
+    font-size:clamp(3rem,10vw,8rem);
+    font-weight:900;line-height:1;
+    letter-spacing:-.02em;
+    animation:fade-up .8s .15s ease both;
+  }
+  .title-main{
+    display:block;
+    background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.7) 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .title-accent{
+    display:block;
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-blue),var(--neon-purple));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    animation:gradient-shift 4s linear infinite;
+  }
+  @keyframes gradient-shift{
+    0%{background-position:0% 50%}
+    100%{background-position:100% 50%}
+  }
+
+  .hero-sub{
+    margin-top:1.5rem;max-width:600px;
+    font-size:1.2rem;font-weight:300;letter-spacing:.05em;
+    color:rgba(255,255,255,.55);
+    animation:fade-up .8s .3s ease both;
+  }
+
+  .hero-btns{
+    display:flex;gap:1.2rem;margin-top:3rem;flex-wrap:wrap;justify-content:center;
+    animation:fade-up .8s .45s ease both;
+  }
+  .btn-primary{
+    padding:.9rem 2.5rem;
+    background:linear-gradient(135deg,var(--neon-cyan),var(--neon-blue));
+    border:none;color:#000;font-family:'Orbitron',sans-serif;
+    font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    cursor:pointer;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+    transition:all .3s;position:relative;overflow:hidden;
+  }
+  .btn-primary::before{
+    content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+    transition:left .5s;
+  }
+  .btn-primary:hover::before{left:100%}
+  .btn-primary:hover{box-shadow:0 0 40px rgba(0,245,255,.6);transform:translateY(-2px)}
+
+  .btn-ghost{
+    padding:.9rem 2.5rem;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.04);
+    color:rgba(255,255,255,.8);
+    font-family:'Orbitron',sans-serif;font-size:.85rem;
+    font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    cursor:pointer;
+    clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+    transition:all .3s;
+  }
+  .btn-ghost:hover{border-color:var(--neon-purple);color:var(--neon-purple);box-shadow:0 0 30px rgba(180,0,255,.3);transform:translateY(-2px)}
+
+  /* Floating orb */
+  .hero-orb{
+    position:absolute;width:500px;height:500px;border-radius:50%;
+    background:radial-gradient(ellipse,rgba(0,132,255,.15) 0%,transparent 70%);
+    animation:orb-float 8s ease-in-out infinite;
+    pointer-events:none;z-index:0;
+  }
+  @keyframes orb-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+  /* Scroll indicator */
+  .scroll-hint{
+    position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:.5rem;
+    color:rgba(255,255,255,.3);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
+    animation:fade-in 1s 1s both;
+  }
+  .scroll-line{
+    width:1px;height:40px;
+    background:linear-gradient(to bottom,transparent,var(--neon-cyan));
+    animation:scroll-pulse 2s infinite;
+  }
+  @keyframes scroll-pulse{0%,100%{opacity:.3;transform:scaleY(.5);transform-origin:top}50%{opacity:1;transform:scaleY(1)}}
+
+  /* STATS strip */
+  .stats-strip{
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid rgba(0,245,255,.1);
+    border-bottom:1px solid rgba(0,245,255,.1);
+    background:rgba(0,20,50,.4);backdrop-filter:blur(10px);
+  }
+  .stat-item{
+    padding:2.5rem 2rem;text-align:center;
+    border-right:1px solid rgba(0,245,255,.08);
+    transition:background .3s;
+  }
+  .stat-item:last-child{border-right:none}
+  .stat-item:hover{background:rgba(0,245,255,.04)}
+  .stat-num{
+    font-family:'Orbitron',sans-serif;font-size:2.5rem;font-weight:900;
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-blue));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .stat-label{
+    font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(255,255,255,.4);margin-top:.3rem;
+  }
+
+  /* SERVICES */
+  #services{
+    position:relative;z-index:1;
+    padding:8rem 4rem;
+  }
+  .section-header{text-align:center;margin-bottom:5rem}
+  .section-tag{
+    display:inline-block;
+    font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--neon-cyan);margin-bottom:1rem;
+  }
+  .section-title{
+    font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4vw,3.5rem);
+    font-weight:700;
+    background:linear-gradient(180deg,#fff 40%,rgba(255,255,255,.4) 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .section-desc{
+    margin-top:1rem;font-size:1.1rem;color:rgba(255,255,255,.4);max-width:500px;margin-inline:auto;
+  }
+
+  .services-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;
+    background:rgba(0,245,255,.1);
+    border:1px solid rgba(0,245,255,.1);
+  }
+  .service-card{
+    background:var(--dark-bg);padding:3rem 2.5rem;
+    position:relative;overflow:hidden;
+    transition:background .4s;
+  }
+  .service-card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 50% 0%,rgba(0,132,255,.08),transparent 70%);
+    opacity:0;transition:opacity .4s;
+  }
+  .service-card:hover{background:rgba(0,20,50,.8)}
+  .service-card:hover::before{opacity:1}
+  .service-icon{
+    width:56px;height:56px;margin-bottom:2rem;position:relative;
+  }
+  .service-icon svg{width:100%;height:100%}
+  .service-icon-ring{
+    position:absolute;inset:0;border:1px solid rgba(0,245,255,.2);
+    border-radius:12px;animation:ring-pulse 3s ease-in-out infinite;
+  }
+  @keyframes ring-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0}}
+  .service-name{
+    font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;
+    letter-spacing:.05em;margin-bottom:.8rem;color:#fff;
+  }
+  .service-desc{font-size:1rem;color:rgba(255,255,255,.45);line-height:1.7;font-weight:300}
+  .service-link{
+    display:inline-flex;align-items:center;gap:.5rem;
+    margin-top:1.5rem;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--neon-cyan);text-decoration:none;
+    transition:gap .3s;
+  }
+  .service-link:hover{gap:.8rem}
+  .service-num{
+    position:absolute;top:2rem;right:2rem;
+    font-family:'Orbitron',sans-serif;font-size:3rem;font-weight:900;
+    color:rgba(0,245,255,.04);line-height:1;
+  }
+
+  /* ABOUT */
+  #about{
+    position:relative;z-index:1;
+    padding:8rem 4rem;
+    display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;
+  }
+  .about-visual{
+    position:relative;display:flex;align-items:center;justify-content:center;
+  }
+  .about-hexagon{
+    width:320px;height:320px;position:relative;
+  }
+  .hex-ring{
+    position:absolute;inset:0;
+    border:1px solid rgba(0,245,255,.15);
+    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    animation:hex-spin 20s linear infinite;
+  }
+  .hex-ring:nth-child(2){
+    inset:20px;border-color:rgba(180,0,255,.15);animation-duration:15s;animation-direction:reverse
+  }
+  .hex-ring:nth-child(3){
+    inset:40px;border-color:rgba(0,132,255,.15);animation-duration:25s
+  }
+  .hex-core{
+    position:absolute;inset:60px;
+    background:linear-gradient(135deg,rgba(0,132,255,.2),rgba(180,0,255,.2));
+    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:900;
+    color:var(--neon-cyan);
+  }
+  @keyframes hex-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  .about-content .section-tag{display:block;text-align:left}
+  .about-title{
+    font-family:'Orbitron',sans-serif;font-size:clamp(1.8rem,3vw,2.8rem);
+    font-weight:700;line-height:1.2;
+    background:linear-gradient(180deg,#fff 40%,rgba(255,255,255,.4) 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:1.5rem;
+  }
+  .about-text{
+    font-size:1.05rem;color:rgba(255,255,255,.5);line-height:1.9;font-weight:300;
+    margin-bottom:2rem;
+  }
+  .about-tags{display:flex;flex-wrap:wrap;gap:.8rem}
+  .tag{
+    padding:.4rem 1rem;
+    border:1px solid rgba(0,245,255,.2);
+    background:rgba(0,245,255,.04);
+    font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;
+    color:rgba(0,245,255,.7);
+  }
+
+  /* FEATURES */
+  #features{
+    position:relative;z-index:1;
+    padding:8rem 4rem;
+  }
+  .features-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;margin-top:4rem;
+  }
+  .feature-item{
+    display:flex;gap:1.5rem;padding:2rem;
+    border:1px solid rgba(255,255,255,.06);
+    background:rgba(255,255,255,.02);
+    transition:border-color .3s,background .3s;
+  }
+  .feature-item:hover{
+    border-color:rgba(0,245,255,.2);
+    background:rgba(0,245,255,.03);
+  }
+  .feature-icon-box{
+    flex-shrink:0;width:48px;height:48px;
+    border:1px solid rgba(0,245,255,.2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.4rem;
+  }
+  .feature-info h3{
+    font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;
+    letter-spacing:.05em;margin-bottom:.6rem;color:#fff;
+  }
+  .feature-info p{font-size:.95rem;color:rgba(255,255,255,.4);line-height:1.7;font-weight:300}
+
+  /* CTA SECTION */
+  #cta{
+    position:relative;z-index:1;
+    padding:8rem 4rem;text-align:center;
+    overflow:hidden;
+  }
+  .cta-glow{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:600px;height:300px;
+    background:radial-gradient(ellipse,rgba(0,132,255,.2),transparent 70%);
+    pointer-events:none;
+  }
+  .cta-title{
+    font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,6vw,5rem);
+    font-weight:900;letter-spacing:-.02em;
+    background:linear-gradient(90deg,var(--neon-cyan),#fff,var(--neon-purple));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:1.5rem;
+  }
+  .cta-sub{font-size:1.15rem;color:rgba(255,255,255,.4);max-width:480px;margin-inline:auto;margin-bottom:3rem;font-weight:300}
+
+  /* FOOTER */
+  footer{
+    position:relative;z-index:1;
+    border-top:1px solid rgba(0,245,255,.1);
+    padding:3rem 4rem;
+    display:flex;align-items:center;justify-content:space-between;
+    background:rgba(0,10,30,.4);backdrop-filter:blur(10px);
+  }
+  .footer-logo{
+    font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:900;
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .footer-copy{font-size:.85rem;color:rgba(255,255,255,.3);letter-spacing:.05em}
+  .footer-links{display:flex;gap:2rem}
+  .footer-links a{color:rgba(255,255,255,.3);text-decoration:none;font-size:.85rem;transition:color .3s}
+  .footer-links a:hover{color:var(--neon-cyan)}
+
+  /* ANIMATIONS */
+  @keyframes fade-up{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s,transform .8s}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+
+  /* Scanline overlay */
+  .scanlines{
+    position:fixed;inset:0;z-index:999;pointer-events:none;
+    background:repeating-linear-gradient(to bottom,transparent 0px,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);
+  }
+
+  /* Grid overlay */
+  .grid-overlay{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(0,245,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,.03) 1px,transparent 1px);
+    background-size:60px 60px;
+  }
+
+  @media(max-width:768px){
+    nav{padding:1rem 1.5rem}
+    .nav-links{display:none}
+    #hero{padding:5rem 1.5rem 3rem}
+    .stats-strip{grid-template-columns:repeat(2,1fr)}
+    #services{padding:5rem 1.5rem}
+    .services-grid{grid-template-columns:1fr}
+    #about{padding:5rem 1.5rem;grid-template-columns:1fr}
+    .about-hexagon{display:none}
+    #features{padding:5rem 1.5rem}
+    .features-grid{grid-template-columns:1fr}
+    #cta{padding:5rem 1.5rem}
+    footer{flex-direction:column;gap:1.5rem;text-align:center;padding:2rem}
+    .footer-links{flex-wrap:wrap;justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="grid-overlay"></div>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<canvas id="starfield"></canvas>
+<div class="aurora">
+  <div class="aurora-band ab1"></div>
+  <div class="aurora-band ab2"></div>
+  <div class="aurora-band ab3"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">AkhtarCloud</div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#cta">Contact</a></li>
+  </ul>
+  <button class="nav-cta">Launch Console</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-orb"></div>
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Next-Gen Cloud Infrastructure
+  </div>
+  <h1 class="hero-title">
+    <span class="title-main">Welcome to</span>
+    <span class="title-accent">AkhtarCloud</span>
+  </h1>
+  <p class="hero-sub">Beyond the horizon of conventional cloud — engineered for velocity, built for the future.</p>
+  <div class="hero-btns">
+    <button class="btn-primary">Get Started →</button>
+    <button class="btn-ghost">Explore Services</button>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip reveal">
+  <div class="stat-item">
+    <div class="stat-num" data-target="99.9">0</div>
+    <div class="stat-label">Uptime %</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" data-target="500">0</div>
+    <div class="stat-label">Active Clients</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" data-target="12">0</div>
+    <div class="stat-label">Global Regions</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" data-target="24">0</div>
+    <div class="stat-label">Support Hours</div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-header reveal">
+    <div class="section-tag">// What we offer</div>
+    <h2 class="section-title">Cloud Services<br>Redefined</h2>
+    <p class="section-desc">Powerful infrastructure solutions built to scale with your ambitions.</p>
+  </div>
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <div class="service-num">01</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(0,245,255,0.06)"/><path d="M14 36C14 30.477 18.477 26 24 26H32C37.523 26 42 30.477 42 36" stroke="#00f5ff" stroke-width="1.5" stroke-linecap="round"/><circle cx="28" cy="20" r="6" stroke="#00f5ff" stroke-width="1.5"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">Compute Engine</div>
+      <p class="service-desc">High-performance virtual machines with instant provisioning and auto-scaling for any workload size.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+    <div class="service-card">
+      <div class="service-num">02</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(0,132,255,0.06)"/><rect x="14" y="18" width="28" height="6" rx="2" stroke="#0084ff" stroke-width="1.5"/><rect x="14" y="28" width="28" height="6" rx="2" stroke="#0084ff" stroke-width="1.5"/><circle cx="20" cy="21" r="2" fill="#0084ff"/><circle cx="20" cy="31" r="2" fill="#0084ff"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">Cloud Storage</div>
+      <p class="service-desc">Infinite, redundant object storage with military-grade encryption and global CDN delivery.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+    <div class="service-card">
+      <div class="service-num">03</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(180,0,255,0.06)"/><path d="M28 14L42 22V34L28 42L14 34V22L28 14Z" stroke="#b400ff" stroke-width="1.5"/><path d="M28 20L36 25V35L28 40L20 35V25L28 20Z" stroke="#b400ff" stroke-width="1" opacity="0.5"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">Edge Network</div>
+      <p class="service-desc">Ultra-low latency global edge nodes that bring your application closer to every user on the planet.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+    <div class="service-card">
+      <div class="service-num">04</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(0,245,255,0.06)"/><path d="M20 28C20 23.582 23.582 20 28 20C32.418 20 36 23.582 36 28" stroke="#00f5ff" stroke-width="1.5"/><path d="M16 28C16 21.373 21.373 16 28 16C34.627 16 40 21.373 40 28" stroke="#00f5ff" stroke-width="1" opacity="0.5"/><circle cx="28" cy="28" r="3" fill="#00f5ff"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">AI Inference</div>
+      <p class="service-desc">Deploy and scale machine learning models with dedicated GPU clusters and one-click inference APIs.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+    <div class="service-card">
+      <div class="service-num">05</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(0,132,255,0.06)"/><path d="M14 28H42M28 14V42M20 20L36 36M36 20L20 36" stroke="#0084ff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/><circle cx="28" cy="28" r="6" stroke="#0084ff" stroke-width="1.5"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">Kubernetes</div>
+      <p class="service-desc">Managed container orchestration with zero-downtime deployments and intelligent autoscaling policies.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+    <div class="service-card">
+      <div class="service-num">06</div>
+      <div class="service-icon">
+        <svg viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="12" fill="rgba(180,0,255,0.06)"/><path d="M22 22L28 16L34 22L40 28L34 34L28 40L22 34L16 28L22 22Z" stroke="#b400ff" stroke-width="1.5"/><path d="M28 22V34M22 28H34" stroke="#b400ff" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/></svg>
+        <div class="service-icon-ring"></div>
+      </div>
+      <div class="service-name">SecureOps</div>
+      <p class="service-desc">End-to-end security with threat detection, DDoS protection, WAF, and zero-trust networking.</p>
+      <a href="#" class="service-link">Explore <span>→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-visual reveal">
+    <div class="about-hexagon">
+      <div class="hex-ring"></div>
+      <div class="hex-ring"></div>
+      <div class="hex-ring"></div>
+      <div class="hex-core">AC</div>
+    </div>
+  </div>
+  <div class="about-content reveal">
+    <div class="section-tag">// About AkhtarCloud</div>
+    <h2 class="about-title">Built by engineers,<br>for the future.</h2>
+    <p class="about-text">AkhtarCloud was born from a vision — to create cloud infrastructure that doesn't just host your applications, but accelerates them. We combine cutting-edge hardware with intelligent software to deliver a platform that scales infinitely and performs relentlessly.</p>
+    <p class="about-text">Every component is engineered for resilience. Every network path is optimized for speed. Every service is designed with you at the center.</p>
+    <div class="about-tags">
+      <span class="tag">DevOps Ready</span>
+      <span class="tag">ISO 27001</span>
+      <span class="tag">SOC 2 Type II</span>
+      <span class="tag">Multi-Region</span>
+      <span class="tag">Open API</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-header reveal">
+    <div class="section-tag">// Why AkhtarCloud</div>
+    <h2 class="section-title">Built Different</h2>
+    <p class="section-desc">The features that set us light-years ahead.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">⚡</div>
+      <div class="feature-info">
+        <h3>Sub-10ms Latency</h3>
+        <p>Our global mesh network routes your traffic through the fastest available path, every single time.</p>
+      </div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">🛡️</div>
+      <div class="feature-info">
+        <h3>Zero-Trust Security</h3>
+        <p>Every request is authenticated and authorized. No assumptions, no loopholes, no backdoors.</p>
+      </div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">📡</div>
+      <div class="feature-info">
+        <h3>Real-Time Monitoring</h3>
+        <p>Full-stack observability with custom dashboards, alerts, and AI-powered anomaly detection.</p>
+      </div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">🔄</div>
+      <div class="feature-info">
+        <h3>Auto-Scaling</h3>
+        <p>Intelligent resource scaling that reacts in milliseconds to traffic spikes — no manual intervention.</p>
+      </div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">💾</div>
+      <div class="feature-info">
+        <h3>Instant Backups</h3>
+        <p>Continuous backup with point-in-time recovery. Your data, always safe, always available.</p>
+      </div>
+    </div>
+    <div class="feature-item reveal">
+      <div class="feature-icon-box">🌐</div>
+      <div class="feature-info">
+        <h3>12 Global Regions</h3>
+        <p>Deploy anywhere. Replicate everywhere. Serve everyone — with zero-compromise performance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <div class="reveal">
+    <div class="section-tag">// Ready to launch?</div>
+    <h2 class="cta-title">Start Your<br>Journey</h2>
+    <p class="cta-sub">Join 500+ teams already building the future on AkhtarCloud. No credit card required.</p>
+    <div class="hero-btns" style="justify-content:center">
+      <button class="btn-primary">Create Free Account</button>
+      <button class="btn-ghost">Talk to Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">AkhtarCloud</div>
+  <div class="footer-copy">© 2025 AkhtarCloud — Created by Akhtar Raza</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Status</a>
+    <a href="#">Docs</a>
+  </div>
+</footer>
+
+<script>
+// Custom cursor
+const cursor=document.getElementById('cursor');
+const ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px'});
+function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)}
+animRing();
+document.querySelectorAll('button,a,.service-card,.feature-item').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.style.width='20px';cursor.style.height='20px';ring.style.width='56px';ring.style.height='56px'});
+  el.addEventListener('mouseleave',()=>{cursor.style.width='12px';cursor.style.height='12px';ring.style.width='36px';ring.style.height='36px'});
+});
+
+// Starfield
+const canvas=document.getElementById('starfield');
+const ctx=canvas.getContext('2d');
+let W,H,stars=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+function mkStars(){
+  stars=[];
+  for(let i=0;i<200;i++){
+    stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.2,s:Math.random()*.5+.1,a:Math.random(),da:Math.random()*.01-.005});
+  }
+}
+mkStars();
+function drawStars(){
+  ctx.clearRect(0,0,W,H);
+  stars.forEach(s=>{
+    s.a+=s.da;if(s.a<0||s.a>1)s.da*=-1;
+    ctx.save();ctx.globalAlpha=s.a;
+    ctx.fillStyle='#fff';ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    s.y+=s.s;if(s.y>H){s.y=0;s.x=Math.random()*W}
+  });
+  // Occasional shooting star
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// Scroll reveal
+const revealEls=document.querySelectorAll('.reveal');
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.1});
+revealEls.forEach(el=>obs.observe(el));
+
+// Counter animation
+function animCount(el,target,duration=2000){
+  let start=0,step=target/60;
+  const isDecimal=target%1!==0;
+  const timer=setInterval(()=>{
+    start=Math.min(start+step,target);
+    el.textContent=isDecimal?start.toFixed(1):Math.round(start);
+    if(start>=target)clearInterval(timer);
+  },duration/60);
+}
+const statsObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('[data-target]').forEach(el=>{
+        animCount(el,parseFloat(el.dataset.target));
+      });
+      statsObs.disconnect();
+    }
+  });
+},{threshold:.3});
+statsObs.observe(document.querySelector('.stats-strip'));
+
+// Parallax orb on mouse
+document.addEventListener('mousemove',e=>{
+  const orb=document.querySelector('.hero-orb');
+  if(!orb)return;
+  const x=(e.clientX/W-.5)*30;
+  const y=(e.clientY/H-.5)*30;
+  orb.style.transform=`translate(${x}px,${y}px)`;
+});
+</script>
+</body>
+</html>
